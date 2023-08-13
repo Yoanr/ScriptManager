@@ -71,49 +71,51 @@ export class AppComponent {
 
   currentStepIndex = 0;
 
+  VehiculeType: string = "";
+  Make: string = STRING_NONE;
+  Model: string = STRING_NONE;
+  Year: number = null!;
+  isTotalLoss: boolean = null!;
+
   @ViewChild("stepper") private stepper: MatStepper | undefined;
 
-  public checkStep(step : number)
-  {
-    if(step == 0)
-    {
-        return this.VehiculeType != "" && this.VehiculeType != undefined && this.VehiculeType != null;
+  public checkStep(step: number) {
+    if (step == 0) {
+      return this.VehiculeType != "" && this.VehiculeType != undefined && this.VehiculeType != null;
     }
 
-    if(step == 1)
-    {
+    if (step == 1) {
       return this.Make !== "" && this.Model != "" && this.Year != null;
     }
+
+    if (step == 2) {
+      return this.isTotalLoss != null;
+    }
+
 
     return false;
   }
 
-  public CheckAndNext(step : number)
-  {
-    if(this.checkStep(step))
-    {
+  public CheckAndNext(step: number) {
+    if (this.checkStep(step)) {
       this.stepper!.selectedIndex = ++step;
       this.currentStepIndex++;
     }
   }
 
-  public CheckIfCompleted(step : number) : boolean
-  {
+  public CheckIfCompleted(step: number): boolean {
+    return true;
     return (this.currentStepIndex >= step) && this.checkStep(step);
   }
-  
+
   private _APIURL = 'https://script.google.com/macros/s/AKfycbz82u26yiYdvuNLR7HwKM4Q6MDaTYnKqeYdzMz9ox8BfOQnZFWWeFGA5uLl4deX1ACgAQ/exec';
-  HttpClient : any;
+  HttpClient: any;
 
-  VehiculeType : string = "";
 
-  isTotalLoss: boolean = false;
+
   PostalCodeLocation: number = null!;
   DoorOpenned: boolean = false;
 
-  Make: string = STRING_NONE;
-  Model: string = STRING_NONE;
-  Year: number = null!;
   isHandFree: boolean = false;
   isKeySimple: boolean = false;
 
@@ -128,7 +130,7 @@ export class AppComponent {
   // Forms Autocomplete
 
   FilteredOptionsMake: Observable<string[]> | undefined;
-  FilteredOptionsModel: Observable<string[]>| undefined;;
+  FilteredOptionsModel: Observable<string[]> | undefined;
 
   ControlMake = new FormControl('');
   ControlModel = new FormControl('');
@@ -140,16 +142,12 @@ export class AppComponent {
     this.HttpClient = _httpClient;
   }
 
-
   ngOnInit() {
     this.currentStepIndex = 0;
-
-    this.FilteredOptionsMake = this.SetModel(this.ControlMake, this.GetMakesKeys());
-    this.FilteredOptionsModel = this.SetModel(this.ControlModel, this.GetModelKeys());
   }
 
   private SetModel(controlModel: FormControl, array: any[]): Observable<string[]> {
-    return controlModel.valueChanges.pipe(startWith(''), map(value2 => this._filter(value2 || '', array)),);
+    return controlModel.valueChanges.pipe(startWith(''), map(value2 => this._filter(value2 || '', array)));
   }
 
   private _filter(value: string, array: string[]): string[] {
@@ -158,17 +156,42 @@ export class AppComponent {
   }
 
   public MainModelUpdated() {
-    this.FilteredOptionsModel = this.SetModel(this.ControlModel, this.GetModelKeysByMake(this.Make));
+    if (this.VehiculeType === "Voiture") {
+      this.FilteredOptionsModel = this.SetModel(this.ControlModel, this.GetModelKeysByMake(this.Make));
+    }
+  }
+
+  public isMakeFromDBErrorMsg() {
+    if (this.Make == "") {
+      return true;
+    }
+
+    if (this.VehiculeType === "Moto") {
+      return (this.GetMakesMotoKeys().includes(this.Make));
+    }
+
+    return (this.GetMakesKeys().includes(this.Make));
   }
 
 
-  HandleVehiculeTypeChange(event : any){
+  public isModelFromDBErrorMsg() {
+    if (this.Model == "") {
+      return true;
+    }
+
+    if (this.VehiculeType === "Moto") {
+      return true;
+    }
+    return (this.GetModelKeysByMake(this.Make).includes(this.Model));
+  }
+
+
+  HandleVehiculeTypeChange(event: any) {
     this.Make = "";
     this.Model = "";
     this.Year = null!;
-    console.log(event.value)
-    if(event.value === undefined)
-    {
+
+    if (event.value === undefined) {
       console.log("MDR")
       this.VehiculeType = "";
       return;
@@ -176,52 +199,83 @@ export class AppComponent {
 
     this.VehiculeType = event.value;
 
-
-    if(this.VehiculeType === "Voiture")
-    {
-      //this.FilteredOptionsMake = this.ControlMake.valueChanges.pipe(startWith(''), map(value1 => this._filterMake(value1 || '', this.GetMakesKeys())),);
-
-      //this.FilteredOptionsModel = this.ControlModel.valueChanges.pipe(startWith(''), map(value2 => this._filterModel(value2 || '', this.GetModelKeys())),);
+    if (this.VehiculeType === "Voiture") {
+      this.FilteredOptionsMake = this.SetModel(this.ControlMake, this.GetMakesKeys());
+      //this.FilteredOptionsModel = this.SetModel(this.ControlModel, this.GetModelKeys());
     }
-    else if(this.VehiculeType === "Moto")
-    {
-      //this.FilteredOptionsMake = this.ControlMake.valueChanges.pipe(startWith(''), map(value1 => this._filterMake(value1 || '', this.GetMakesMotoKeys())),);
+    else if (this.VehiculeType === "Moto") {
+      this.FilteredOptionsMake = this.SetModel(this.ControlMake, this.GetMakesMotoKeys());
     }
   }
 
-  public SetValueTotalLoss(e : any){
+  HandleIsTotalLossTypeChange(event: any) {
+
+    if (event.value === undefined) {
+      this.isTotalLoss = null!;
+      return;
+    }
+
+    this.isTotalLoss = (event.value === "Je n'ai plus de clé.");
+  }
+
+  GetCorrectLabelStep3(): string {
+    if (this.VehiculeType === 'Moto') {
+      if (this.isTotalLoss == null) {
+        return "";
+      }
+      if (this.isTotalLoss) {
+        return "Malheureusement, on ne se déplace plus pour les pertes totales de clés de moto.";
+      }
+      else {
+        return "Cela fera 70€ pour la clé simple, et il faudra nécessairement que vous veniez à notre boutique pour la programmation de la clé avec le véhicule,\n votre carte d’identité ainsi que votre carte grise.";
+      }
+    }
+
+    if (this.VehiculeType === 'Voiture') {
+      if (this.isTotalLoss == null) {
+        return "";
+      }
+      if (this.isTotalLoss) {
+        return " D’accord. Puisque vous n’avez plus aucune clé, il faudra nécessairement une intervention sur place pour vous en refaire une.\n Peu importe par qui vous passez pour résoudre votre problème Monsieur/Madame, sachez que ce ne sera pas possible autrement.";
+      }
+      else {
+        return "Très bien, et est-ce que vous souhaitez refaire une clé simple, c’est-à-dire une clé qui permet juste d’ouvrir et démarrer la voiture, et qui n’a pas de boutons;\n ou est-ce que vous souhaitez une clé centralisée, qui permet de verrouiller et déverrouiller la voiture à distance ?";
+      }
+    }
+
+    return "";
+  }
+
+
+  public SetValueTotalLoss(e: any) {
     this.isTotalLoss = e.checked;
   }
 
-  public GetTotalLossSliderStr()
-  {
+  public GetTotalLossSliderStr() {
     return (this.isTotalLoss) ? "Perte Totale" : "Double de clé";
   }
 
-  public SetHandFree(e : any){
+  public SetHandFree(e: any) {
     this.isHandFree = e.checked;
   }
 
-  public GetHandFreeSliderStr()
-  {
+  public GetHandFreeSliderStr() {
     return (this.isHandFree) ? "Main Libre" : "Non Main Libre";
   }
 
-  public SetSimpleKey(e : any){
+  public SetSimpleKey(e: any) {
     this.isKeySimple = e.checked;
   }
 
-  public GetSimpleKeySliderStr()
-  {
+  public GetSimpleKeySliderStr() {
     return (this.isKeySimple) ? "Clé Simple" : "Clé Centralisée";
   }
 
-  public SetDoorKey(e : any){
+  public SetDoorKey(e: any) {
     this.DoorOpenned = e.checked;
   }
 
-  public GetDoorSliderStr()
-  {
+  public GetDoorSliderStr() {
     return (this.DoorOpenned) ? "Porte Ouverte" : "Porte Fermée";
   }
 
@@ -239,10 +293,6 @@ export class AppComponent {
 
   private GetMakeCode(make: string): string {
     return MakeCodes[make];
-  }
-
-  private GetMakeMotoCode(makeMoto: string): string {
-    return MakeMotoCodes[makeMoto];
   }
 
   public Capitalize(input: string): string {
@@ -292,54 +342,53 @@ export class AppComponent {
     params = params.append('isHandFree', this.isHandFree);
     params = params.append('isKeySimple', this.isKeySimple);
 
-  const headers= new HttpHeaders()
-  .set('content-type', 'application/json')
-  .set('Access-Control-Allow-Origin', '*')
-  .set('Access-Control-Allow-Credentials', 'true')
-  .set('Access-Control-Allow-Headers', 'Content-Type')
-  .set('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    const headers = new HttpHeaders()
+      .set('content-type', 'application/json')
+      .set('Access-Control-Allow-Origin', '*')
+      .set('Access-Control-Allow-Credentials', 'true')
+      .set('Access-Control-Allow-Headers', 'Content-Type')
+      .set('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
 
     const requestOptions = { params: params, headers: headers };
 
     this.Searching = true;
 
     return this.HttpClient.get(this._APIURL, requestOptions)
-    .subscribe((data: any) => {
-      var arr = Object.keys(data).map(key => ({type: key, value: data[key]}));
-      var res = Number(arr[0]['value'][0]);
-      var resStr = "";
-      var isError = false;
-      if(res > 0)
-      {
-        this.Price = res;
-        resStr = this.Price + " €";
-      }
-      else
-      {
-        isError = true;
-        this.Price = null!;
-        resStr = this.getErrorMessage(res, this.isHandFree);
-      }
+      .subscribe((data: any) => {
+        var arr = Object.keys(data).map(key => ({ type: key, value: data[key] }));
+        var res = Number(arr[0]['value'][0]);
+        var resStr = "";
+        var isError = false;
+        if (res > 0) {
+          this.Price = res;
+          resStr = this.Price + " €";
+        }
+        else {
+          isError = true;
+          this.Price = null!;
+          resStr = this.getErrorMessage(res, this.isHandFree);
+        }
 
-      var today = new Date();
-      var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-      this.Resultats.push({
-        Time: time,
-        VehiculeType: this.VehiculeType,
-        Make: this.Make,
-        Model: this.Model, 
-        Year: this.Year,
-        isHandFree: this.isHandFree,
-        isKeySimple: this.isKeySimple,
-        Res: resStr,
-        IsError: isError })
+        var today = new Date();
+        var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+        this.Resultats.push({
+          Time: time,
+          VehiculeType: this.VehiculeType,
+          Make: this.Make,
+          Model: this.Model,
+          Year: this.Year,
+          isHandFree: this.isHandFree,
+          isKeySimple: this.isKeySimple,
+          Res: resStr,
+          IsError: isError
+        })
 
         this.PriceStr = resStr;
         this.Searching = false;
-    });
-}
+      });
+  }
 
-  public getErrorMessage(errorCode : number, isHandFree : boolean) {
+  public getErrorMessage(errorCode: number, isHandFree: boolean) {
     if (errorCode == MakeModelWrong) {
       return "Marque/Modèle introuvable final stock";
     }
@@ -382,79 +431,71 @@ export class AppComponent {
     else if (errorCode == MakeModelImpossible) {
       return "Marque/Model invalide";
     }
-    
+
     return errorCode.toString();
   }
 
-  public GetStrFromBool(bool: boolean) : string
-  {
+  public GetStrFromBool(bool: boolean): string {
     return (bool) ? "X" : "";
   }
 
-  public SearchForPrice() 
-  {
-    if(!this.CheckData())
-    {
+  public SearchForPrice() {
+    if (!this.CheckData()) {
       return;
     }
 
-    if(this.VehiculeType === "Moto")
-    {
+    if (this.VehiculeType === "Moto") {
       var today = new Date();
       var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-      if(this.isKeySimple)
-      {
+      if (this.isKeySimple) {
         this.Resultats.push({
           Time: time,
           VehiculeType: this.VehiculeType,
           Make: this.Make,
-          Model: this.Model, 
+          Model: this.Model,
           Year: this.Year,
           isHandFree: this.isHandFree,
           isKeySimple: this.isKeySimple,
           Res: "70 €",
-          IsError: false});
+          IsError: false
+        });
 
-          this.Price = 70;
-          this.PriceStr = "70 €";
+        this.Price = 70;
+        this.PriceStr = "70 €";
       }
-      else
-      {
+      else {
         this.Resultats.push({
           Time: time,
           VehiculeType: this.VehiculeType,
           Make: this.Make,
-          Model: this.Model, 
+          Model: this.Model,
           Year: this.Year,
           isHandFree: this.isHandFree,
           isKeySimple: this.isKeySimple,
           Res: "Pas possible",
-          IsError: true});
+          IsError: true
+        });
 
-          this.Price = null!;
-          this.PriceStr = "Pas possible en clé centralisée";
+        this.Price = null!;
+        this.PriceStr = "Pas possible en clé centralisée";
       }
-        return;
+      return;
     }
 
     this.PriceStr = "";
     this.GetPriceByHTTP();
   }
 
-  public CheckData() : boolean
-  {
-    if(this.Make === "" || this.Make === null)
-    {
+  public CheckData(): boolean {
+    if (this.Make === "" || this.Make === null) {
       alert("Marque incorrecte");
       return false;
     }
-    if(this.Model === "" || this.Model === null)
-    {
+    if (this.Model === "" || this.Model === null) {
       alert("Modèle incorrecte");
       return false;
     }
-    if(this.Year === null)
-    {
+    if (this.Year === null) {
       alert("Année incorrecte");
       return false;
     }

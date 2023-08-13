@@ -1,106 +1,143 @@
 <!-- Copyright Yoan ROCK. All Rights Reserved. -->
 <div class="scroll-element">
-  <div fxLayout="row" fxLayoutAlign="space-between center"  class="input-padd">
-    <h1>Script Manager (v1)</h1>
-  </div>
-
   <div fxLayout="row" fxLayoutAlign="space-between center" class="input-padd">
-    <h2><u>Formulaire</u></h2>
+    <h1>Script Manager (v1)</h1>
   </div>
 
   <mat-stepper orientation="vertical" [linear]="true" #stepper>
     <ng-template matStepperIcon="edit">
       <mat-icon>check</mat-icon>
     </ng-template>
+    <!--- --->
+    <!--- --->
+    <!--- 1-->
+    <!--- --->
+    <!--- --->
     <mat-step [completed]="CheckIfCompleted(0)">
-        <ng-template matStepLabel> Société Buy My Clé bonjour. Cameron à votre écoute, comment puis-je vous aider ?  </ng-template>        
-        <br><br>
-        <mat-chip-listbox aria-label="VehiculeType selection" (change)="HandleVehiculeTypeChange($event)" >
-          <mat-chip-option>
-            <img matChipAvatar src="https://static.vecteezy.com/ti/vecteur-libre/p3/4999433-icone-voiture-icone-voiture-vecteur-sur-fond-blanc-vector-illustration-gratuit-vectoriel.jpg"/>
-            Voiture
-          </mat-chip-option>
-          <mat-chip-option color="warn">
-            <img matChipAvatar src="https://cdn.icon-icons.com/icons2/37/PNG/512/moto_moto_3567.png"/>
-            Moto
-          </mat-chip-option>
-        </mat-chip-listbox>
-        <br>
-        <div>
-          <button mat-button (click)="CheckAndNext(0)">Next</button>
-        </div>
+      <ng-template matStepLabel>
+        Société Buy My Clé bonjour. Cameron à votre écoute, comment puis-je vous
+        aider ?
+      </ng-template>
+      <mat-chip-listbox
+        aria-label="VehiculeType selection"
+        (change)="HandleVehiculeTypeChange($event)"
+      >
+        <mat-chip-option>
+          <img
+            matChipAvatar
+            src="https://static.vecteezy.com/ti/vecteur-libre/p3/4999433-icone-voiture-icone-voiture-vecteur-sur-fond-blanc-vector-illustration-gratuit-vectoriel.jpg"
+          />
+          Voiture
+        </mat-chip-option>
+        <mat-chip-option color="warn">
+          <img
+            matChipAvatar
+            src="https://cdn.icon-icons.com/icons2/37/PNG/512/moto_moto_3567.png"
+          />
+          Moto
+        </mat-chip-option>
+      </mat-chip-listbox>
+      <br />
+      <div>
+        <button mat-button (click)="CheckAndNext(0)">Next</button>
+      </div>
     </mat-step>
 
+    <!--- --->
+    <!--- --->
+    <!--- 2-->
+    <!--- --->
+    <!--- --->
+    <mat-step [completed]="CheckIfCompleted(1)">
+      <ng-template matStepLabel
+        >Bien sûr, quel est le modèle de votre véhicule ?</ng-template
+      >
 
-
-
-    
-      <mat-step [completed]="CheckIfCompleted(1)">
-      
-        <ng-template  matStepLabel>Bien sûr, quel est le modèle de votre véhicule ?</ng-template>
-        <form>
-        <mat-form-field appearance="outline" class="input-padd input-L">
-          <mat-label>Marque</mat-label>
-          <input [(ngModel)]="Make"
-                 type="text"
-                 placeholder="Marque"
-                 matInput
-                 [formControl]="ControlMake"
-                 [matAutocomplete]="auto" required>
-          <mat-autocomplete #auto="matAutocomplete">
-            <mat-option *ngFor="let option of GetMakesKeys()" [value]="option">
-              {{option}}
-            </mat-option>
-          </mat-autocomplete>
-        </mat-form-field>
-      </form>
-
-      <form>
       <mat-form-field appearance="outline" class="input-padd input-L">
-        <mat-label>Modèle</mat-label>
-        <input [(ngModel)]="Model"
-               type="text"
-               placeholder="Modèle"
-               matInput
-               [formControl]="ControlModel"
-               [matAutocomplete]="auto" required>
-        <mat-autocomplete #auto="matAutocomplete">
-          <mat-option *ngFor="let option of GetModelKeysByMake(this.Make)" [value]="option">
-            {{option}}
+        <mat-label>Marque</mat-label>
+        <input
+          matInput
+          [formControl]="ControlMake"
+          [matAutocomplete]="auto1"
+          placeholder="Marque"
+          [(ngModel)]="Make"
+          type="text"
+          (ngModelChange)="MainModelUpdated()"
+          required
+        />
+
+        <mat-autocomplete #auto1="matAutocomplete">
+          <mat-option
+            *ngFor="let option of FilteredOptionsMake | async"
+            [value]="option"
+          >
+            {{ option }}
           </mat-option>
         </mat-autocomplete>
       </mat-form-field>
-    </form>
 
+      <div
+        style="color: red"
+        *ngIf="!isMakeFromDBErrorMsg()"
+        appearance="outline"
+        class="input-padd"
+      >
+        <mat-icon>notification_important</mat-icon>
+        Attention marque "{{ this.Make }}" non présente dans la base de donnée
+        <mat-icon>notification_important</mat-icon>
+      </div>
+      <br />
 
-    <mat-form-field appearance="outline" class="input-padd input-L">
-      <mat-label>Marque</mat-label>
-      <input matInput [formControl]="ControlMake" [matAutocomplete]="auto" placeholder="Marque" [(ngModel)]="Make"
-        type="text" (ngModelChange)="MainModelUpdated()" required>
-      <mat-autocomplete #auto="matAutocomplete">
-        <mat-option *ngFor="let option of FilteredOptionsMake | async" [value]="option">
-          {{option}}
-        </mat-option>
-      </mat-autocomplete>
-    </mat-form-field>
+      <br />
 
-    <mat-form-field appearance="outline" class="input-padd input-L">
-      <mat-label>Modèle</mat-label>
-      <input matInput [formControl]="ControlModel" [matAutocomplete]="auto" placeholder="Modèle" [(ngModel)]="Model"
-        type="text" required>
-      <mat-autocomplete #auto="matAutocomplete">
-        <mat-option *ngFor="let option2 of FilteredOptionsModel | async" [value]="option2">
-          {{option2}}
-        </mat-option>
-      </mat-autocomplete>
-    </mat-form-field><br>
+      <mat-form-field appearance="outline" class="input-padd input-L">
+        <mat-label>Modèle</mat-label>
+        <input
+          matInput
+          [formControl]="ControlModel"
+          [matAutocomplete]="auto2"
+          placeholder="Modèle"
+          [(ngModel)]="Model"
+          type="text"
+          required
+        />
+        <mat-autocomplete #auto2="matAutocomplete">
+          <mat-option
+            *ngFor="let option2 of FilteredOptionsModel | async"
+            [value]="option2"
+          >
+            {{ option2 }}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
 
-      <div>C’est une {{ (this.Make === "") ? "XXXXXXXX" : this.Make }} {{ (this.Model === "") ? "XXXXX" : this.Model }} de quelle année ?</div>
-  
+      <div
+        style="color: red"
+        *ngIf="!isModelFromDBErrorMsg()"
+        appearance="outline"
+        class="input-padd"
+      >
+        <mat-icon>notification_important</mat-icon>
+        Attention marque "{{ this.Model }}" non présente dans la base de donnée
+        <mat-icon>notification_important</mat-icon>
+      </div>
+      <br />
+
+      <div>
+        C’est une {{ this.Make === "" ? "XXXXXXXX" : this.Make }}
+        {{ this.Model === "" ? "XXXXX" : this.Model }} de quelle année ?
+      </div>
+
       <mat-form-field appearance="outline" class="input-padd input-miniL">
         <mat-label>Année</mat-label>
-        <input matInput placeholder="Année Min" [(ngModel)]="Year" type="number" required>
-      </mat-form-field><br>
+        <input
+          matInput
+          placeholder="Année Min"
+          [(ngModel)]="Year"
+          type="number"
+          required
+        /> </mat-form-field
+      ><br />
 
       <div>
         <button mat-button matStepperPrevious>Back</button>
@@ -108,94 +145,147 @@
         <!--<button mat-button (click)="stepper.reset()">Reset</button>-->
       </div>
     </mat-step>
+
+    <!--- --->
+    <!--- --->
+    <!--- 3-->
+    <!--- --->
+    <!--- --->
     <mat-step [completed]="CheckIfCompleted(2)">
-      <ng-template matStepLabel>Done</ng-template>
-      <p>You are now done.</p>
+      <ng-template matStepLabel>
+        Est-ce qu’il vous reste une clé, ou vous n’avez plus rien du tout ?
+      </ng-template>
+
+      <mat-chip-listbox
+        aria-label="VehiculeType selection"
+        (change)="HandleIsTotalLossTypeChange($event)"
+      >
+        <mat-chip-option> Il me reste une clé. </mat-chip-option>
+        <mat-chip-option color="warn"> Je n'ai plus de clé. </mat-chip-option>
+      </mat-chip-listbox>
+      <br />
       <div>
         <button mat-button matStepperPrevious>Back</button>
-        <button mat-button (click)="stepper.reset()">Reset</button>
+        <button mat-button (click)="CheckAndNext(2)">Next</button>
       </div>
     </mat-step>
+
+    <!--- --->
+    <!--- --->
+    <!--- 3-->
+    <!--- --->
+    <!--- --->
+    <mat-step [completed]="CheckIfCompleted(3)">
+      <ng-template matStepLabel> {{ GetCorrectLabelStep3() }} </ng-template>
+
+      <div *ngIf="VehiculeType === 'Moto'">
+        <div *ngIf="isTotalLoss"></div>
+
+        <div *ngIf="!isTotalLoss"></div>
+      </div>
+
+      <div>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button (click)="CheckAndNext(3)">Next</button>
+      </div>
+    </mat-step>
+
+    <!--- --->
+    <!--- --->
+    <!--- 4-->
+    <!--- --->
+    <!--- --->
   </mat-stepper>
 
-  
-
-
-
   <div *ngIf="false">
-    <mat-slide-toggle class="input-padd" (change)="SetValueTotalLoss($event)"> {{GetTotalLossSliderStr()}} </mat-slide-toggle> <br><br>
+    <mat-slide-toggle class="input-padd" (change)="SetValueTotalLoss($event)">
+      {{ GetTotalLossSliderStr() }}
+    </mat-slide-toggle>
+    <br /><br />
 
-    <div *ngIf="isTotalLoss" >
-      
-      <mat-slide-toggle class="input-padd" (change)="SetDoorKey($event)"> {{GetDoorSliderStr()}} </mat-slide-toggle> <br>
+    <div *ngIf="isTotalLoss">
+      <mat-slide-toggle class="input-padd" (change)="SetDoorKey($event)">
+        {{ GetDoorSliderStr() }}
+      </mat-slide-toggle>
+      <br />
       <mat-form-field appearance="outline" class="input-padd input-miniL">
         <mat-label>Code Postal</mat-label>
-        <input matInput placeholder="Année Min" [(ngModel)]="PostalCodeLocation" type="number" required>
-      </mat-form-field><br>
-      
+        <input
+          matInput
+          placeholder="Année Min"
+          [(ngModel)]="PostalCodeLocation"
+          type="number"
+          required
+        /> </mat-form-field
+      ><br />
     </div>
-    
-  
-      
-      <mat-slide-toggle class="input-padd" (change)="SetHandFree($event)"> {{GetHandFreeSliderStr()}} </mat-slide-toggle> <br><br>
-  
-   
-      <mat-slide-toggle class="input-padd" (change)="SetSimpleKey($event)"> {{GetSimpleKeySliderStr()}} </mat-slide-toggle> <br>
-  
-  
-      <button fxLayout="row" fxLayoutAlign="start center" mat-flat-button color="success0" (click)="SearchForPrice()"
-          class="btnAction"> 
-          <mat-icon>search</mat-icon>Chercher le prix
-        </button>
-        <br>
-  
-        <div class="input-padd">
-  
-          <div *ngIf="Searching; else PriceFound" >
-            <mat-spinner></mat-spinner>
-          </div>
-    
-          <ng-template #PriceFound>
-            <h1>{{ PriceStr }}</h1>
-          </ng-template>
-          <br>
-  
-        </div>
-  
-     
-  
-        <mat-checkbox class="input-padd input-L" [(ngModel)]="ShowHistory">Montrer/Cacher l'historique
-        </mat-checkbox><br>
-        <table class="styled-table" *ngIf="ShowHistory">
-  
-          <tr>
-            <td class="tdrekt"> Heure </td>
-            <td class="tdrekt"> Type </td>
-            <td class="tdrekt"> Marque </td>
-            <td class="tdrekt"> Modèle </td>
-            <td class="tdrekt"> Année </td>
-            <td class="tdrekt"> Main libre </td>
-            <td class="tdrekt"> Clé simple </td>
-            <td class="tdrekt"> Résultat </td>
-          </tr>
-      
-      
-          <tr *ngFor="let item of Resultats">
-            <td> {{item.Time}}</td>
-            <td> {{item.VehiculeType}}</td>
-            <td> {{item.Make}}</td>
-            <td> {{item.Model}}</td>
-            <td> {{item.Year}}</td>
-            <td> {{GetStrFromBool(item.isHandFree)}}</td>
-            <td> {{GetStrFromBool(item.isKeySimple)}}</td>
-            <td [ngClass]="{'tdrekt-error': item.IsError == true,'tdrekt-success': item.IsError == false, }" class="tdrekt"> {{item.Res}}</td>
-          </tr>
-        </table>
+
+    <mat-slide-toggle class="input-padd" (change)="SetHandFree($event)">
+      {{ GetHandFreeSliderStr() }}
+    </mat-slide-toggle>
+    <br /><br />
+
+    <mat-slide-toggle class="input-padd" (change)="SetSimpleKey($event)">
+      {{ GetSimpleKeySliderStr() }}
+    </mat-slide-toggle>
+    <br />
+
+    <button
+      fxLayout="row"
+      fxLayoutAlign="start center"
+      mat-flat-button
+      color="success0"
+      (click)="SearchForPrice()"
+      class="btnAction"
+    >
+      <mat-icon>search</mat-icon>Chercher le prix
+    </button>
+    <br />
+
+    <div class="input-padd">
+      <div *ngIf="Searching; else PriceFound">
+        <mat-spinner></mat-spinner>
+      </div>
+
+      <ng-template #PriceFound>
+        <h1>{{ PriceStr }}</h1>
+      </ng-template>
+      <br />
+    </div>
+
+    <mat-checkbox class="input-padd input-L" [(ngModel)]="ShowHistory"
+      >Montrer/Cacher l'historique </mat-checkbox
+    ><br />
+    <table class="styled-table" *ngIf="ShowHistory">
+      <tr>
+        <td class="tdrekt">Heure</td>
+        <td class="tdrekt">Type</td>
+        <td class="tdrekt">Marque</td>
+        <td class="tdrekt">Modèle</td>
+        <td class="tdrekt">Année</td>
+        <td class="tdrekt">Main libre</td>
+        <td class="tdrekt">Clé simple</td>
+        <td class="tdrekt">Résultat</td>
+      </tr>
+
+      <tr *ngFor="let item of Resultats">
+        <td>{{ item.Time }}</td>
+        <td>{{ item.VehiculeType }}</td>
+        <td>{{ item.Make }}</td>
+        <td>{{ item.Model }}</td>
+        <td>{{ item.Year }}</td>
+        <td>{{ GetStrFromBool(item.isHandFree) }}</td>
+        <td>{{ GetStrFromBool(item.isKeySimple) }}</td>
+        <td
+          [ngClass]="{'tdrekt-error': item.IsError == true,'tdrekt-success': item.IsError == false, }"
+          class="tdrekt"
+        >
+          {{ item.Res }}
+        </td>
+      </tr>
+    </table>
   </div>
 
-
-    
-
-    <script>
-    </script>
-    <router-outlet></router-outlet>
+  <script></script>
+  <router-outlet></router-outlet>
+</div>
